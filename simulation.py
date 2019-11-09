@@ -51,6 +51,7 @@ class Simulation:
         self.cells[x-size:x+size, y-size:y+size] = 1 if button == 2 else 0
         self.cells = np.clip(self.cells, 0, 1)
 
+<<<<<<< HEAD
     def fast_conv2d(self, cells, kernel_fft, kernel_size):
         conv_cells = np.fft.irfft2(np.fft.rfft2(cells) * kernel_fft)
 
@@ -59,6 +60,8 @@ class Simulation:
 
         return conv_cells
     
+=======
+>>>>>>> 466b6415a2880a9644017b3301a1fa6427a3cd73
     def on_draw(self, dt):
         # random example
         # rnd = np.random.uniform(0, 1, (cwidth, cheight))
@@ -96,11 +99,16 @@ class Simulation:
         # self.new_cells += (circle_cells/np.sum(self.circle_kernel) < 0.2).astype(float)
         # self.new_cells += (self.new_cells - gaussian_cells/np.sum(self.gaussian_kernel))*0.1
 
-        self.new_cells = self.cells
-        self.new_cells += (1-((gaussian_cells > 0.1) & (gaussian_cells < 0.3) & (circle_cells > 0.1) & (circle_cells < 0.3)).astype(float))*0.1
-        self.new_cells += (-((gaussian_cells < 0.1) | (gaussian_cells > 0.3)).astype(float))*0.1
+        # self.new_cells = self.cells
+        # self.new_cells += (1-((gaussian_cells > 0.1) & (gaussian_cells < 0.3) & (circle_cells > 0.1) & (circle_cells < 0.3)).astype(float))*0.1
+        # self.new_cells += (-((gaussian_cells < 0.1) | (gaussian_cells > 0.3)).astype(float))*0.1
 
         # self.new_cells = ((self.new_cells < 3.1) & (self.new_cells > 2.5)).astype(float)
+        # new_cells[:decay_size, :decay_size] = self.distance_exp_decay
+        self.new_cells /= np.sum(self.distance_exp_decay)
+
+        self.new_cells = ((self.new_cells < 0.7) & (self.new_cells > 0.3)).astype(float)
+        print(self.new_cells.max(), self.new_cells.min(), np.mean(self.new_cells))
 
         # self.new_cells = self.cells + (self.new_cells - self.cells)*0.1
         # new_cells /= np.max(new_cells)
