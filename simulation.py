@@ -88,6 +88,7 @@ class Simulation:
 
         gaussian_cells = self.fast_conv2d(self.simulation_cells, self.gaussian_kernel_fft, self.gaussian_kernel_size)
         circle_cells = self.fast_conv2d(self.simulation_cells, self.circle_kernel_fft, self.circle_kernel_size)
+        checkerboard_cells = self.fast_conv2d(self.simulation_cells, self.kernel_fft, self.kernel_size)
 
         # new_cells = new_cells[1:, 1:]
         # new_cells = np.pad(new_cells, [(1, 0), (1, 0)])
@@ -115,8 +116,10 @@ class Simulation:
         # new_cells /= np.max(new_cells)
         # new_cells = ((new_cells >= 2) & (new_cells <= 3) & (old_cells == 1)) | ((new_cells == 3) & (old_cells==0))
         # new_cells = new_cells.astype(float)
-        self.new_cells = circle_cells/np.sum(self.circle_kernel)
+        self.new_cells = checkerboard_cells/np.sum(self.kernel)
         self.new_cells = ((self.new_cells < self.GUI.values["popMax"]) & ((self.new_cells > self.GUI.values["birthMin"]) | ((self.new_cells > self.GUI.values["deadMin"]) & (self.simulation_cells > self.GUI.values["lifeMin"])))).astype(float)
+        # self.new_cells = np.exp(-(self.new_cells - 0.5 + 0.2*self.simulation_cells) ** 2/(0.1+0.2*self.simulation_cells))
+
         if self.averaging:
             self.cells = 0.3*self.simulation_cells+0.7*self.cells
         else:
@@ -124,4 +127,4 @@ class Simulation:
         self.simulation_cells, self.new_cells = self.new_cells, self.simulation_cells
 
         # debug view na kernel konvoluce
-        self.cells[:self.circle_kernel_size, :self.circle_kernel_size] = self.circle_kernel
+        self.cells[:self.kernel_size, :self.kernel_size] = self.kernel
