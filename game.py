@@ -36,7 +36,7 @@ window = app.Window(width=512, height=512)
 cwidth, cheight = 512, 512
 
 GUI = gui.GUI()
-simulation = Simulation(cwidth, cheight)
+simulation = Simulation(cwidth, cheight, GUI)
 
 @window.event
 def on_draw(dt):
@@ -52,7 +52,7 @@ def on_draw(dt):
 @window.event
 def on_mouse_drag(x, y, dx, dy, button):
     simulation.on_mouse_drag(x/window.width, (window.height-y)/window.height, dx, -dy, button)
-    print('Mouse drag (x=%.1f, y=%.1f, dx=%.1f, dy=%.1f, button=%d)' % (x, y, dx, dy, button))
+    print('Mouse drag (x=%.1f, y=%.1f, dx=%.1f, dy=%.1f, button=%d)' % (x, y, dx, dy, button), window.width, window.height)
 
 
 # @window.event
@@ -62,6 +62,10 @@ def on_mouse_drag(x, y, dx, dy, button):
 @window.event
 def on_key_press(symbol, modifiers):
     GUI.on_key_press(symbol, modifiers)
+
+@window.event
+def on_character(text):
+    GUI.on_character(text)
 
 render = gloo.Program(render_vertex, render_fragment, count=4)
 render["position"] = [(-1, -1), (-1, +1), (+1, -1), (+1, +1)]
