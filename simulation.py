@@ -1,8 +1,9 @@
 import numpy as np
 import scipy
+from scipy.ndimage import gaussian_filter
 
 class Simulation:
-    averaging = True
+    averaging = False
 
     def __init__(self, width, height, GUI):
         self.width = width
@@ -13,16 +14,35 @@ class Simulation:
         self.simulation_cells = (np.random.uniform(0, 1, (self.width, self.height)) > 0.5).astype(np.float)
         self.new_cells = np.zeros_like(self.cells)
 
-        self.decay_size = 33
-        mu = self.decay_size // 2
-        sigma = 4
-        r = 2
-        distance_exp_decay = np.fromfunction(lambda x, y: np.exp(-(x-mu)**2 / sigma - (y-mu)**2 / sigma), (self.decay_size, self.decay_size))
-        distance_ring_selector = np.fromfunction(lambda x, y: 0.5*(1-np.cos(0.03*((x-mu) ** 2 + (y-mu) ** 2))), (self.decay_size, self.decay_size))
-        distance_gaussian_ring = np.fromfunction(lambda x,y : np.exp(-(np.sqrt((x-mu) ** 2 + (y-mu) ** 2) - r) ** 2/sigma), (self.decay_size, self.decay_size))
-        # self.distance_exp_decay = distance_exp_decay/np.max(distance_exp_decay)
-        self.distance_exp_decay = distance_gaussian_ring
-        self.distance_exp_decay_fft = np.fft.rfft2(self.distance_exp_decay, self.cells.shape)
+        # gaussian kernel
+        self.gaussian_kernel_size = 33
+        mu = self.gaussian_kernel_size // 2
+        sigma = 30
+        self.gaussian_kernel = np.fromfunction(lambda x, y: np.exp(-(x-mu)**2 / sigma - (y-mu)**2 / sigma), (self.gaussian_kernel_size, self.gaussian_kernel_size))
+        self.gaussian_kernel = self.gaussian_kernel/np.max(self.gaussian_kernel)
+        self.gaussian_kernel_fft = np.fft.rfft2(self.gaussian_kernel, self.cells.shape)
+
+        # circle kernel
+        self.circle_kernel_size = 33
+        center = self.circle_kernel_size // 2
+        radius = 2
+        sigma = 2
+        def circle_fn(x,y):
+            dist = np.sqrt((x-center)**2 + (y-center)**2)
+            return np.exp(-(dist-radius)**2 / sigma)
+        self.circle_kernel = np.fromfunction(circle_fn, (self.circle_kernel_size, self.circle_kernel_size))
+        self.circle_kernel = self.circle_kernel/np.max(self.circle_kernel)
+        self.circle_kernel_fft = np.fft.rfft2(self.circle_kernel, self.cells.shape)
+
+        # checkerboard kernel
+        self.kernel_size = 16
+        half_size = self.kernel_size//2
+        self.kernel = np.zeros((self.kernel_size, self.kernel_size))
+        self.kernel[:half_size, :half_size] = 1.0
+        self.kernel[half_size:, half_size:] = 1.0
+
+        self.kernel = gaussian_filter(self.kernel, 0.1)
+        self.kernel_fft = np.fft.rfft2(self.kernel, self.cells.shape)
 
     def on_draw_random(self, dt):
         rnd = np.random.uniform(0, 1, (self.width, self.height))
@@ -34,6 +54,14 @@ class Simulation:
         size = 10
         self.simulation_cells[x-size:x+size, y-size:y+size] = 0.0
         # self.cells = np.clip(self.cells, 0, 1)
+
+    def fast_conv2d(self, cells, kernel_fft, kernel_size):
+        conv_cells = np.fft.irfft2(np.fft.rfft2(cells) * kernel_fft)
+
+        conv_cells = np.roll(conv_cells, -kernel_size//2+1, 0)
+        conv_cells = np.roll(conv_cells, -kernel_size//2+1, 1)
+
+        return conv_cells
 
     def on_draw(self, dt):
         # random example
@@ -56,20 +84,30 @@ class Simulation:
         #             new_cells[x, y] = 1
 
         # neighbours_filter = np.array([[1,1,1], [1,0,1], [1,1,1]])
-        # self.new_cells = scipy.signal.convolve2d(self.cells, self.distance_exp_decay, "same", "wrap")
+        # self.new_cells = scipy.signal.convolve2d(self.cells, self.kernel, "same", "wrap")
 
-        self.new_cells = np.fft.irfft2(np.fft.rfft2(self.simulation_cells) * self.distance_exp_decay_fft)
-        self.new_cells = np.roll(self.new_cells, -self.decay_size//2+1, 0)
-        self.new_cells = np.roll(self.new_cells, -self.decay_size//2+1, 1)
+        gaussian_cells = self.fast_conv2d(self.simulation_cells, self.gaussian_kernel_fft, self.gaussian_kernel_size)
+        circle_cells = self.fast_conv2d(self.simulation_cells, self.circle_kernel_fft, self.circle_kernel_size)
+
         # new_cells = new_cells[1:, 1:]
         # new_cells = np.pad(new_cells, [(1, 0), (1, 0)])
         # new_cells = new_cells[1:-1, 1:-1]
-        # new_cells = scipy.signal.fftconvolve(old_cells, self.distance_exp_decay, mode='same')
+        # new_cells = scipy.signal.fftconvolve(old_cells, self.kernel, mode='same')
 
+        # new_cells[:decay_size, :decay_size] = self.kernel
+        # weird
+        # self.new_cells -= (circle_cells/np.sum(self.circle_kernel) > 0.8).astype(float)
+        # self.new_cells += (circle_cells/np.sum(self.circle_kernel) < 0.2).astype(float)
+        # self.new_cells += (self.new_cells - gaussian_cells/np.sum(self.gaussian_kernel))*0.1
+
+        # self.new_cells = self.cells
+        # self.new_cells += (1-((gaussian_cells > 0.1) & (gaussian_cells < 0.3) & (circle_cells > 0.1) & (circle_cells < 0.3)).astype(float))*0.1
+        # self.new_cells += (-((gaussian_cells < 0.1) | (gaussian_cells > 0.3)).astype(float))*0.1
+
+        # self.new_cells = ((self.new_cells < 3.1) & (self.new_cells > 2.5)).astype(float)
         # new_cells[:decay_size, :decay_size] = self.distance_exp_decay
-        self.new_cells /= np.sum(self.distance_exp_decay)
-
-        self.new_cells = ((self.new_cells < self.GUI.values["popMax"]) & ((self.new_cells > self.GUI.values["birthMin"]) | ((self.new_cells > self.GUI.values["deadMin"]) & (self.simulation_cells > self.GUI.values["lifeMin"])))).astype(float)
+        # self.new_cells /= np.sum(self.distance_exp_decay)
+        #
         # self.new_cells= 4*self.new_cells*(1-self.new_cells)
         # print(self.new_cells.max(), self.new_cells.min(), np.mean(self.new_cells))
 
@@ -77,12 +115,13 @@ class Simulation:
         # new_cells /= np.max(new_cells)
         # new_cells = ((new_cells >= 2) & (new_cells <= 3) & (old_cells == 1)) | ((new_cells == 3) & (old_cells==0))
         # new_cells = new_cells.astype(float)
+        self.new_cells = circle_cells/np.sum(self.circle_kernel)
+        self.new_cells = ((self.new_cells < self.GUI.values["popMax"]) & ((self.new_cells > self.GUI.values["birthMin"]) | ((self.new_cells > self.GUI.values["deadMin"]) & (self.simulation_cells > self.GUI.values["lifeMin"])))).astype(float)
         if self.averaging:
             self.cells = 0.3*self.simulation_cells+0.7*self.cells
         else:
             self.cells = self.simulation_cells
         self.simulation_cells, self.new_cells = self.new_cells, self.simulation_cells
 
-
         # debug view na kernel konvoluce
-        self.cells[:self.decay_size, :self.decay_size] = self.distance_exp_decay
+        self.cells[:self.circle_kernel_size, :self.circle_kernel_size] = self.circle_kernel

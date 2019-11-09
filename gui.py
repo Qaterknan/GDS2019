@@ -4,7 +4,7 @@ class GUI:
 
     values = {
         "deadMin": 0.2,
-        "popMax" : 0.6,
+        "popMax" : 0.5,
         "birthMin" : 0.3,
         "lifeMin" : 0.5
     }
