@@ -51,8 +51,8 @@ class Simulation:
     def on_mouse_drag(self, x, y, dx, dy, button):
         x = int(x*self.width)
         y = int(y*self.height)
-        size = 10
-        self.simulation_cells[x-size:x+size, y-size:y+size] = 0.0
+        size = 1
+        self.simulation_cells[x-size:x+size, y-size:y+size] = 1.0
         # self.cells = np.clip(self.cells, 0, 1)
 
     def fast_conv2d(self, cells, kernel_fft, kernel_size):

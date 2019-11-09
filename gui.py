@@ -3,9 +3,9 @@ from glumpy import app
 class GUI:
 
     values = {
-        "deadMin": 0.2,
+        "deadMin": 0.15,
         "popMax" : 0.5,
-        "birthMin" : 0.3,
+        "birthMin" : 0.4,
         "lifeMin" : 0.5
     }
     actions = {
