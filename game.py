@@ -27,7 +27,7 @@ varying vec2 v_texcoord;
 void main()
 {
     float v;
-    v = texture2D(texture, v_texcoord).r;
+    v = texture2D(texture, v_texcoord.yx).r;
     gl_FragColor = vec4(v, v, v, 1.0);
 }
 """
@@ -49,9 +49,10 @@ def on_draw(dt):
     gl.glViewport(0, 0, window.width, window.height)
     render.draw(gl.GL_TRIANGLE_STRIP)
 
-# @window.event
-# def on_mouse_drag(x, y, dx, dy, button):
-#     print('Mouse drag (x=%.1f, y=%.1f, dx=%.1f, dy=%.1f, button=%d)' % (x, y, dx, dy, button))
+@window.event
+def on_mouse_drag(x, y, dx, dy, button):
+    simulation.on_mouse_drag(x/window.width, (window.height-y)/window.height, dx, -dy, button)
+    print('Mouse drag (x=%.1f, y=%.1f, dx=%.1f, dy=%.1f, button=%d)' % (x, y, dx, dy, button))
 
 
 # @window.event
