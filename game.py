@@ -30,17 +30,22 @@ void main()
 """
 
 window = app.Window(width=1024, height=1024)
-cwidth, cheight = 1024, 1024
+cwidth, cheight = 512, 512
 
 cells = (np.random.uniform(0, 1, (cwidth, cheight)) > 0.5).astype(np.float)
 new_cells = np.zeros_like(cells)
 
-distance_exp_decay = np.zeros((16, 16))
-
+decay_size = 33
+mu = decay_size // 2
+sigma = 10
+distance_exp_decay = np.fromfunction(lambda x, y: np.exp(-(x-mu)**2 / sigma - (y-mu)**2 / sigma), (decay_size, decay_size))
+distance_exp_decay = distance_exp_decay/np.max(distance_exp_decay)
+# print(distance_exp_decay)
+# distance_exp_decay_fft = np.fft.rfft2(distance_exp_decay, cells.shape)
 
 @window.event
 def on_draw(dt):
-    global cells, new_cells
+    global cells, new_cells, distance_exp_decay_fft
     # random example
     # rnd = np.random.uniform(0, 1, (cwidth, cheight))
     # rnd = np.repeat(np.expand_dims(rnd, -1), 4, -1)
@@ -61,8 +66,21 @@ def on_draw(dt):
     #         else:
     #             new_cells[x, y] = 1
 
+
     # neighbours_filter = np.array([[1,1,1], [1,0,1], [1,1,1]])
-    # new_cells = scipy.signal.convolve2d(cells, neighbours_filter, "same", "wrap")
+    new_cells = scipy.signal.convolve2d(cells, distance_exp_decay, "same", "wrap")
+
+    # new_cells = np.fft.irfft2(np.fft.rfft2(cells) * distance_exp_decay_fft)
+    # new_cells = new_cells[1:, 1:]
+    # new_cells = np.pad(new_cells, [(1, 0), (1, 0)])
+    # new_cells = new_cells[1:-1, 1:-1]
+    # new_cells = scipy.signal.fftconvolve(cells, distance_exp_decay, mode='same')
+
+    # new_cells[:decay_size, :decay_size] = distance_exp_decay
+    new_cells /= np.sum(distance_exp_decay)
+
+
+    # new_cells /= np.max(new_cells)
     # new_cells = ((new_cells >= 2) & (new_cells <= 3) & (cells == 1)) | ((new_cells == 3) & (cells==0))
     # new_cells = new_cells.astype(float)
 
