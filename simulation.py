@@ -26,7 +26,7 @@ class Simulation:
         size = 10
         self.cells[x-size:x+size, y-size:y+size] += 0.5
         self.cells = np.clip(self.cells, 0, 1)
-        
+
     def on_draw(self, dt):
         # random example
         # rnd = np.random.uniform(0, 1, (cwidth, cheight))
@@ -59,9 +59,10 @@ class Simulation:
         # new_cells = scipy.signal.fftconvolve(old_cells, self.distance_exp_decay, mode='same')
 
         # new_cells[:decay_size, :decay_size] = self.distance_exp_decay
-        # self.new_cells /= np.sum(self.distance_exp_decay)
+        self.new_cells /= np.sum(self.distance_exp_decay)
 
-        self.new_cells = ((self.new_cells < 3.1) & (self.new_cells > 2.5)).astype(float)
+        self.new_cells = ((self.new_cells < 0.7) & (self.new_cells > 0.3)).astype(float)
+        print(self.new_cells.max(), self.new_cells.min(), np.mean(self.new_cells))
 
         # self.new_cells = self.cells + (self.new_cells - self.cells)*0.1
         # new_cells /= np.max(new_cells)

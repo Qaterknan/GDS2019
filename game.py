@@ -32,7 +32,7 @@ void main()
 }
 """
 
-window = app.Window(width=1024, height=1024)
+window = app.Window(width=512, height=512)
 cwidth, cheight = 512, 512
 
 GUI = gui.GUI()
