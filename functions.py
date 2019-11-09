@@ -1,0 +1,6 @@
+new_cells /= np.sum(distance_exp_decay)
+# new_cells = 4*new_cells * (1 - new_cells)
+# new_cells = 8*new_cells*np.exp(-4*new_cells)
+new_cells = ((new_cells > 0.3 ) & (new_cells < 0.7)).astype(float)
+new_cells = (0.9*cells + 0.1*new_cells)
+print(new_cells.max(),new_cells.min(),np.mean(new_cells))
