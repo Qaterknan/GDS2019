@@ -9,10 +9,10 @@ class Simulation:
         self.cells = (np.random.uniform(0, 1, (self.width, self.height)) > 0.5).astype(np.float)
         self.new_cells = np.zeros_like(self.cells)
 
-        decay_size = 9
-        mu = decay_size // 2
-        sigma = 10
-        distance_exp_decay = np.fromfunction(lambda x, y: np.exp(-(x-mu)**2 / sigma - (y-mu)**2 / sigma), (decay_size, decay_size))
+        self.decay_size = 33
+        mu = self.decay_size // 2
+        sigma = 30
+        distance_exp_decay = np.fromfunction(lambda x, y: np.exp(-(x-mu)**2 / sigma - (y-mu)**2 / sigma), (self.decay_size, self.decay_size))
         self.distance_exp_decay = distance_exp_decay/np.max(distance_exp_decay)
         # distance_exp_decay_fft = np.fft.rfft2(distance_exp_decay, cells.shape)
 
@@ -48,17 +48,22 @@ class Simulation:
         #             new_cells[x, y] = 1
 
         # neighbours_filter = np.array([[1,1,1], [1,0,1], [1,1,1]])
-        self.new_cells = scipy.signal.convolve2d(self.cells, self.distance_exp_decay, "same", "wrap")
+        # self.new_cells = scipy.signal.convolve2d(self.cells, self.distance_exp_decay, "same", "wrap")
 
-        # new_cells = np.fft.irfft2(np.fft.rfft2(old_cells) * self.distance_exp_decay_fft)
+        self.new_cells = np.fft.irfft2(np.fft.rfft2(self.cells) * np.fft.rfft2(self.distance_exp_decay, self.cells.shape))
+        self.new_cells = np.roll(self.new_cells, -self.decay_size//2+1, 0)
+        self.new_cells = np.roll(self.new_cells, -self.decay_size//2+1, 1)
         # new_cells = new_cells[1:, 1:]
         # new_cells = np.pad(new_cells, [(1, 0), (1, 0)])
         # new_cells = new_cells[1:-1, 1:-1]
         # new_cells = scipy.signal.fftconvolve(old_cells, self.distance_exp_decay, mode='same')
 
         # new_cells[:decay_size, :decay_size] = self.distance_exp_decay
-        self.new_cells /= np.sum(self.distance_exp_decay)
+        # self.new_cells /= np.sum(self.distance_exp_decay)
 
+        self.new_cells = ((self.new_cells < 3.1) & (self.new_cells > 2.5)).astype(float)
+
+        # self.new_cells = self.cells + (self.new_cells - self.cells)*0.1
         # new_cells /= np.max(new_cells)
         # new_cells = ((new_cells >= 2) & (new_cells <= 3) & (old_cells == 1)) | ((new_cells == 3) & (old_cells==0))
         # new_cells = new_cells.astype(float)
