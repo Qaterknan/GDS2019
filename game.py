@@ -6,6 +6,9 @@ import numpy as np
 import scipy
 import scipy.signal
 from glumpy import app, gl, glm, gloo
+import gui
+
+GUI = gui.GUI()
 
 render_vertex = """
 attribute vec2 position;
@@ -103,6 +106,9 @@ def on_draw(dt):
 # def on_mouse_motion(x, y, dx, dy):
 #     print('Mouse motion (x=%.1f, y=%.1f, dx=%.1f, dy=%.1f)' % (x, y, dx, dy))
 
+@window.event
+def on_key_press(symbol, modifiers):
+    GUI.on_key_press(symbol, modifiers)
 
 render = gloo.Program(render_vertex, render_fragment, count=4)
 render["position"] = [(-1, -1), (-1, +1), (+1, -1), (+1, +1)]
