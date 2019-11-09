@@ -14,7 +14,7 @@ class Simulation:
         sigma = 30
         distance_exp_decay = np.fromfunction(lambda x, y: np.exp(-(x-mu)**2 / sigma - (y-mu)**2 / sigma), (self.decay_size, self.decay_size))
         self.distance_exp_decay = distance_exp_decay/np.max(distance_exp_decay)
-        # distance_exp_decay_fft = np.fft.rfft2(distance_exp_decay, cells.shape)
+        self.distance_exp_decay_fft = np.fft.rfft2(self.distance_exp_decay, self.cells.shape)
 
     def on_draw_random(self, dt):
         rnd = np.random.uniform(0, 1, (self.width, self.height))
@@ -50,7 +50,7 @@ class Simulation:
         # neighbours_filter = np.array([[1,1,1], [1,0,1], [1,1,1]])
         # self.new_cells = scipy.signal.convolve2d(self.cells, self.distance_exp_decay, "same", "wrap")
 
-        self.new_cells = np.fft.irfft2(np.fft.rfft2(self.cells) * np.fft.rfft2(self.distance_exp_decay, self.cells.shape))
+        self.new_cells = np.fft.irfft2(np.fft.rfft2(self.cells) * self.distance_exp_decay_fft)
         self.new_cells = np.roll(self.new_cells, -self.decay_size//2+1, 0)
         self.new_cells = np.roll(self.new_cells, -self.decay_size//2+1, 1)
         # new_cells = new_cells[1:, 1:]
