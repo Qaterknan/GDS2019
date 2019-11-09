@@ -67,4 +67,10 @@ class Simulation:
         # new_cells /= np.max(new_cells)
         # new_cells = ((new_cells >= 2) & (new_cells <= 3) & (old_cells == 1)) | ((new_cells == 3) & (old_cells==0))
         # new_cells = new_cells.astype(float)
+
+
         self.cells, self.new_cells = self.new_cells, self.cells
+
+
+        # debug view na kernel konvoluce
+        self.cells[:self.decay_size, :self.decay_size] = self.distance_exp_decay
