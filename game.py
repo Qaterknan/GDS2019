@@ -7,8 +7,8 @@ import scipy
 import scipy.signal
 from glumpy import app, gl, glm, gloo
 import gui
+from simulation import Simulation
 
-GUI = gui.GUI()
 
 render_vertex = """
 attribute vec2 position;
@@ -35,65 +35,17 @@ void main()
 window = app.Window(width=1024, height=1024)
 cwidth, cheight = 512, 512
 
-cells = (np.random.uniform(0, 1, (cwidth, cheight)) > 0.5).astype(np.float)
-new_cells = np.zeros_like(cells)
-
-decay_size = 33
-mu = decay_size // 2
-sigma = 10
-distance_exp_decay = np.fromfunction(lambda x, y: np.exp(-(x-mu)**2 / sigma - (y-mu)**2 / sigma), (decay_size, decay_size))
-distance_exp_decay = distance_exp_decay/np.max(distance_exp_decay)
-# print(distance_exp_decay)
-# distance_exp_decay_fft = np.fft.rfft2(distance_exp_decay, cells.shape)
+GUI = gui.GUI()
+simulation = Simulation(cwidth, cheight)
 
 @window.event
 def on_draw(dt):
-    global cells, new_cells, distance_exp_decay_fft
-    # random example
-    # rnd = np.random.uniform(0, 1, (cwidth, cheight))
-    # rnd = np.repeat(np.expand_dims(rnd, -1), 4, -1)
-    # rnd[:, :, 0] = 0
-    # render["texture"] = rnd
-    # render["texture"][:, :, 0] = rnd
+    simulation.on_draw(dt)
 
-
-    # game of life wat version
-    # print(render["texture"].shape)
-    # cells = render["texture"][:, :, 0]
-    # for x, row in enumerate(cells):
-    #     for y, cell in enumerate(row):
-    #         suma = np.sum(cells[x-2:x+1, y-2:y+1]) - cell
-    #         # cells[x, y] = 0.5
-    #         if suma < 2 or suma > 3:
-    #             new_cells[x, y] = 0
-    #         else:
-    #             new_cells[x, y] = 1
-
-
-    # neighbours_filter = np.array([[1,1,1], [1,0,1], [1,1,1]])
-    new_cells = scipy.signal.convolve2d(cells, distance_exp_decay, "same", "wrap")
-
-    # new_cells = np.fft.irfft2(np.fft.rfft2(cells) * distance_exp_decay_fft)
-    # new_cells = new_cells[1:, 1:]
-    # new_cells = np.pad(new_cells, [(1, 0), (1, 0)])
-    # new_cells = new_cells[1:-1, 1:-1]
-    # new_cells = scipy.signal.fftconvolve(cells, distance_exp_decay, mode='same')
-
-    # new_cells[:decay_size, :decay_size] = distance_exp_decay
-    new_cells /= np.sum(distance_exp_decay)
-
-
-    # new_cells /= np.max(new_cells)
-    # new_cells = ((new_cells >= 2) & (new_cells <= 3) & (cells == 1)) | ((new_cells == 3) & (cells==0))
-    # new_cells = new_cells.astype(float)
-
-
-
-    render["texture"][:, :, 0] = new_cells
-    cells, new_cells = new_cells, cells
+    render["texture"][:, :, 0] = simulation.cells
 
     # gl.glDisable(gl.GL_BLEND)
-    gl.glClear(gl.GL_COLOR_BUFFER_BIT)
+    # gl.glClear(gl.GL_COLOR_BUFFER_BIT)
     gl.glViewport(0, 0, window.width, window.height)
     render.draw(gl.GL_TRIANGLE_STRIP)
 
