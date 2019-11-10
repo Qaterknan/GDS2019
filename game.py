@@ -8,7 +8,11 @@ import scipy.signal
 from glumpy import app, gl, glm, gloo
 import gui
 from simulation import Simulation
+from os import path
 
+MOUSE_MULTIPLIER = 1.0
+if path.exists("stepan"):
+    MOUSE_MULTIPLIER = 2.0
 
 render_vertex = """
 attribute vec2 position;
@@ -62,6 +66,7 @@ def on_draw(dt):
 
 @window.event
 def on_mouse_drag(x, y, dx, dy, button):
+    x,y = x/MOUSE_MULTIPLIER, y/MOUSE_MULTIPLIER
     GUI.on_mouse_drag(x, window.height-y, dx, dy, button)
     # normalizovaná myš
     if window.height - y > gui_height:
@@ -71,6 +76,7 @@ def on_mouse_drag(x, y, dx, dy, button):
 
 @window.event
 def on_mouse_motion(x, y, dx, dy):
+    x,y = x/MOUSE_MULTIPLIER, y/MOUSE_MULTIPLIER
     GUI.on_mouse_motion(x, window.height-y, dx, dy)
     # print('Mouse motion (x=%.1f, y=%.1f, dx=%.1f, dy=%.1f)' % (x, y, dx, dy))
 

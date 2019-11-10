@@ -16,8 +16,11 @@ class Simulation:
 
         self.derivative_metric = np.zeros(self.metricPoints)
         self.gaussian_metric = np.zeros(self.metricPoints)
-        GUI.objects.append(Graph(80, 20, 60, "derivative_metric", self))
-        GUI.objects.append(Graph(200, 20, 60, "gaussian_metric", self))
+        GUI.objects.append(Graph(270, 0, 60, "derivative_metric", self, top_limit=17, bottom_limit=11))
+        GUI.objects.append(Graph(390, 0, 60, "gaussian_metric", self, top_limit=14000, bottom_limit=6000))
+        self.win_condition = {}
+        self.win_condition["derivative_metric"] = False
+        self.win_condition["gaussian_metric"] = False
 
         self.cells = np.zeros((self.width, self.height))
         self.simulation_cells = (np.random.uniform(0, 1, (self.width, self.height)) > 0.5).astype(np.float)
@@ -56,7 +59,7 @@ class Simulation:
     def on_draw_random(self, dt):
         rnd = np.random.uniform(0, 1, (self.width, self.height))
         self.cells = rnd
-    
+
     def on_mouse_drag(self, x, y, dx, dy, button):
         x = int(x*self.width)
         y = int(y*self.height)
@@ -140,7 +143,8 @@ class Simulation:
         # print(derivative_sum, gaussian_sum, gaussian_sq_sum)
         # Update metrics
         # self.new_cells = np.exp(-(self.new_cells - 0.5 + 0.2*self.simulation_cells) ** 2/(0.1+0.2*self.simulation_cells))
-
+        if(self.win_condition["derivative_metric"] and self.win_condition["gaussian_metric"]):
+            print("WIN")
         if self.averaging:
             self.cells = 0.3*self.simulation_cells+0.7*self.cells
         else:

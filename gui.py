@@ -17,7 +17,7 @@ class KernelPainter:
         self.x = x
         self.y = y
         self.kernel = kernel
-    
+
     def render(self, pixels):
         width, height = self.kernel.shape
         pixels[self.x:self.x+width, self.y:self.y+height] = self.kernel
@@ -40,7 +40,7 @@ class Slider:
 
 
         self.set_value(values[value_key])
-    
+
     def set_value(self, val):
         diff = self.max_val - self.min_val
         self.set_value_relative((val - self.min_val)/diff)
@@ -52,14 +52,14 @@ class Slider:
         # self.current_val = val*diff + self.min_val
         self.values[self.value_key] = val*diff + self.min_val
         self.rect_fg.height = int(self.height * val)
-    
+
     def render(self, pixels):
         self.rect_bg.render(pixels)
         self.rect_fg.render(pixels)
-    
+
     def on_mouse_press(self, x, y, button):
         self.on_mouse(x, y)
-    
+
     def on_mouse_drag(self,x, y, dx, dy, buttons):
         self.on_mouse(x, y)
 
@@ -69,22 +69,50 @@ class Slider:
             self.set_value_relative(y_diff/self.height)
 
 class Graph(Rectangle):
-    def __init__(self, x, y, height, show_array_name, simulation_object):
-        super().__init__(x,y,len(getattr(simulation_object, show_array_name)), height)
+    def __init__(self, x, y, height, show_array_name, simulation_object, top_limit = 10, bottom_limit = 5):
+        super().__init__(x,y,len(getattr(simulation_object, show_array_name)), height, 0)
         self.show_array_name = show_array_name
         self.simulation_object = simulation_object
+        self.top_limit = top_limit
+        self.bottom_limit = bottom_limit
+        self.time_within_bounds = 0
 
     def render(self, pixels):
+        top_limit = self.top_limit
+        bottom_limit = self.bottom_limit
         # Plot between max and min in the array
         show_array = getattr(self.simulation_object, self.show_array_name)
-        bound = show_array.max()
-        pixelated = (self.height-1) * show_array / bound
+        bounds = [show_array.min(), show_array.max()]
+        boundedUp, boundedDown = False, False
+        if top_limit > bounds[1]:
+            bounds[1] = top_limit
+            boundedUp = True
+        if bottom_limit < bounds[0]:
+            bounds[0] = bottom_limit
+            boundedDown = True
+        if boundedUp and boundedDown:
+            self.time_within_bounds += 1
+            if self.time_within_bounds > 100:
+                self.simulation_object.win_condition[self.show_array_name] = True
+        else:
+            self.time_within_bounds = 0
+            self.simulation_object.win_condition[self.show_array_name] = False
+        pixelated = (self.height-1) * (show_array - bounds[0]) / (bounds[1] - bounds[0])
+        top_limit = (self.height-1) * (top_limit - bounds[0]) / (bounds[1] - bounds[0])
+        bottom_limit = (self.height-1) * (bottom_limit - bounds[0]) / (bounds[1] - bounds[0])
+        top_limit = int(np.round(top_limit))
+        bottom_limit = int(np.round(bottom_limit))
+        # print(pixelated.min())
         pixelated = np.round(pixelated).astype(int)
+        # print(min(pixelated))
         # Clear
         pixels[self.x:self.x+self.width, self.y:self.y+self.height] = 0.0
         # Choose coloured pixels
         for i in range(len(show_array)):
             pixels[self.x+i, self.y+pixelated[self.width-1-i]] = 1.0
+            # Draw target lines
+            pixels[self.x+i, self.y+top_limit] = 0.5
+            pixels[self.x+i, self.y+bottom_limit] = 0.5
 
 class GUI:
 
