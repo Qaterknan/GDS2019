@@ -7,6 +7,8 @@ class Simulation:
     averaging = False
     metricPoints = 100
 
+    brush_size = 5
+
     def __init__(self, width, height, GUI):
         self.width = width
         self.height = height
@@ -54,11 +56,11 @@ class Simulation:
     def on_draw_random(self, dt):
         rnd = np.random.uniform(0, 1, (self.width, self.height))
         self.cells = rnd
-
+    
     def on_mouse_drag(self, x, y, dx, dy, button):
         x = int(x*self.width)
         y = int(y*self.height)
-        size = 1
+        size = self.brush_size
         self.simulation_cells[x-size:x+size, y-size:y+size] = 1.0
         # self.cells = np.clip(self.cells, 0, 1)
 
@@ -155,4 +157,4 @@ class Simulation:
         self.simulation_cells, self.new_cells = self.new_cells, self.simulation_cells
 
         # debug view na kernel konvoluce
-        self.cells[:self.kernel_size, :self.kernel_size] = self.kernel
+        # self.cells[:self.kernel_size, :self.kernel_size] = self.kernel
