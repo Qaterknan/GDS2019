@@ -72,7 +72,10 @@ def on_mouse_drag(x, y, dx, dy, button):
 @window.event
 def on_mouse_motion(x, y, dx, dy):
     GUI.on_mouse_motion(x, window.height-y, dx, dy)
-    # print('Mouse motion (x=%.1f, y=%.1f, dx=%.1f, dy=%.1f)' % (x, y, dx, dy))
+
+@window.event
+def on_mouse_press(x, y, button):
+    GUI.on_mouse_press(x, y, button)
 
 # ===== KEYBOARD EVENTS =====
 
