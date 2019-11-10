@@ -1,4 +1,15 @@
+import numpy as np
 from glumpy import app
+
+class Rectangle:
+    def __init__(self, x, y, width, height):
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+
+    def render(self, pixels):
+        pixels[self.x:self.x+self.width, self.y:self.y+self.height] = 1.0
 
 class GUI:
 
@@ -21,11 +32,21 @@ class GUI:
         "ě" : ("lifeMin", -0.01)
     }
 
-    def __init__(self):
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+        self.objects = []
+        self.objects.append(Rectangle(20, 20, 40, 40))
+        self.pixels = np.zeros((width, height))
+
         print("===== settings =====")
         for valKey, value in self.values.items():
             print(valKey, "=", value)
         print("========================")
+    
+    def on_draw(self, dt):
+        for o in self.objects:
+            o.render(self.pixels)
 
     def on_key_press(self, symbol, modifiers):
         changed = False
