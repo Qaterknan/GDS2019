@@ -54,16 +54,22 @@ def on_draw(dt):
     gl.glViewport(0, 0, window.width, window.height)
     render.draw(gl.GL_TRIANGLE_STRIP)
 
+# ===== MOUSE EVENTS =====
+
 @window.event
 def on_mouse_drag(x, y, dx, dy, button):
+    GUI.on_mouse_drag(x, window.height-y, dx, dy, button)
     # normalizovaná myš
     simulation.on_mouse_drag(x/window.width, (window.height-y-gui_height)/cheight, dx, -dy, button)
-    print('Mouse drag (x=%.1f, y=%.1f, dx=%.1f, dy=%.1f, button=%d)' % (x, y, dx, dy, button), window.width, window.height)
+    # print('Mouse drag (x=%.1f, y=%.1f, dx=%.1f, dy=%.1f, button=%d)' % (x, y, dx, dy, button), window.width, window.height)
 
 
-# @window.event
-# def on_mouse_motion(x, y, dx, dy):
-#     print('Mouse motion (x=%.1f, y=%.1f, dx=%.1f, dy=%.1f)' % (x, y, dx, dy))
+@window.event
+def on_mouse_motion(x, y, dx, dy):
+    GUI.on_mouse_motion(x, window.height-y, dx, dy)
+    # print('Mouse motion (x=%.1f, y=%.1f, dx=%.1f, dy=%.1f)' % (x, y, dx, dy))
+
+# ===== KEYBOARD EVENTS =====
 
 @window.event
 def on_key_press(symbol, modifiers):
