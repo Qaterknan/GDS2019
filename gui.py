@@ -11,6 +11,24 @@ class Rectangle:
     def render(self, pixels):
         pixels[self.x:self.x+self.width, self.y:self.y+self.height] = 1.0
 
+class Graph(Rectangle):
+    def __init__(self, x, y, height, show_array_name, simulation_object):
+        super().__init__(x,y,len(getattr(simulation_object, show_array_name)), height)
+        self.show_array_name = show_array_name
+        self.simulation_object = simulation_object
+
+    def render(self, pixels):
+        # Plot between max and min in the array
+        show_array = getattr(self.simulation_object, self.show_array_name)
+        bound = show_array.max()
+        pixelated = (self.height-1) * show_array / bound
+        pixelated = np.round(pixelated).astype(int)
+        # Clear
+        pixels[self.x:self.x+self.width, self.y:self.y+self.height] = 0.0
+        # Choose coloured pixels
+        for i in range(len(show_array)):
+            pixels[self.x+i, self.y+pixelated[self.width-1-i]] = 1.0
+
 class GUI:
 
     values = {

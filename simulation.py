@@ -1,6 +1,7 @@
 import numpy as np
 import scipy
 from scipy.ndimage import gaussian_filter
+from gui import Graph
 
 class Simulation:
     averaging = False
@@ -13,6 +14,8 @@ class Simulation:
 
         self.derivative_metric = np.zeros(self.metricPoints)
         self.gaussian_metric = np.zeros(self.metricPoints)
+        GUI.objects.append(Graph(80, 20, 60, "derivative_metric", self))
+        GUI.objects.append(Graph(200, 20, 60, "gaussian_metric", self))
 
         self.cells = np.zeros((self.width, self.height))
         self.simulation_cells = (np.random.uniform(0, 1, (self.width, self.height)) > 0.5).astype(np.float)
@@ -128,8 +131,8 @@ class Simulation:
         # fourierSum = np.sum(self.new_cells[3*self.width//4:][3*self.height//4:])
         g_filtered = gaussian_filter(derivative, 6)
         gaussian_sum = np.sum(g_filtered)
-        np.roll(self.derivative_metric, 1)
-        np.roll(self.gaussian_metric, 1)
+        self.derivative_metric = np.roll(self.derivative_metric, 1)
+        self.gaussian_metric = np.roll(self.gaussian_metric, 1)
         self.derivative_metric[0] = derivative_sum
         self.gaussian_metric[0] = gaussian_sum
         # print(derivative_sum, gaussian_sum, gaussian_sq_sum)
