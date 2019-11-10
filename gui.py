@@ -6,7 +6,8 @@ class GUI:
         "deadMin": 0.15,
         "popMax" : 0.5,
         "birthMin" : 0.4,
-        "lifeMin" : 0.5
+        "lifeMin" : 0.5,
+        "showFourier" : 1,
     }
     actions = {
         app.window.key.Q: ("deadMin", 0.1),
@@ -18,7 +19,9 @@ class GUI:
         "y" : ("birthMin", 0.01),
         "x" : ("birthMin", -0.01),
         "+" : ("lifeMin", 0.01),
-        "ě" : ("lifeMin", -0.01)
+        "ě" : ("lifeMin", -0.01),
+        "f" : ("showFourier", 1),
+        "g" : ("showFourier", -1)
     }
 
     def __init__(self):
