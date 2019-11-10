@@ -4,6 +4,7 @@ from scipy.ndimage import gaussian_filter
 
 class Simulation:
     averaging = False
+    metricPoints = 100
 
     brush_size = 5
 
@@ -11,6 +12,9 @@ class Simulation:
         self.width = width
         self.height = height
         self.GUI = GUI
+
+        self.derivative_metric = np.zeros(self.metricPoints)
+        self.gaussian_metric = np.zeros(self.metricPoints)
 
         self.cells = np.zeros((self.width, self.height))
         self.simulation_cells = (np.random.uniform(0, 1, (self.width, self.height)) > 0.5).astype(np.float)
@@ -120,12 +124,33 @@ class Simulation:
         # new_cells = new_cells.astype(float)
         self.new_cells = checkerboard_cells/np.sum(self.kernel)
         self.new_cells = ((self.new_cells < self.GUI.values["popMax"]) & ((self.new_cells > self.GUI.values["birthMin"]) | ((self.new_cells > self.GUI.values["deadMin"]) & (self.simulation_cells > self.GUI.values["lifeMin"])))).astype(float)
+        # Determines the derivative
+        derivative = np.absolute(self.new_cells - self.simulation_cells)
+        derivative_sum = np.log(np.sum(derivative)+1)/np.log(2)
+        # fourierSum = np.sum(self.new_cells[3*self.width//4:][3*self.height//4:])
+        g_filtered = gaussian_filter(derivative, 6)
+        gaussian_sum = np.sum(g_filtered)
+        np.roll(self.derivative_metric, 1)
+        np.roll(self.gaussian_metric, 1)
+        self.derivative_metric[0] = derivative_sum
+        self.gaussian_metric[0] = gaussian_sum
+        # print(derivative_sum, gaussian_sum, gaussian_sq_sum)
+        # Update metrics
         # self.new_cells = np.exp(-(self.new_cells - 0.5 + 0.2*self.simulation_cells) ** 2/(0.1+0.2*self.simulation_cells))
 
         if self.averaging:
             self.cells = 0.3*self.simulation_cells+0.7*self.cells
         else:
             self.cells = self.simulation_cells
+            if self.GUI.values["showFourier"] == 1:
+                fourier = np.absolute(np.fft.fft2(self.new_cells))
+                fourier = np.log(fourier+1)
+                fourier = fourier / fourier.max()
+                self.cells = fourier
+            if self.GUI.values["showFourier"] == 2:
+                self.cells = derivative
+            if self.GUI.values["showFourier"] == 3:
+                self.cells = g_filtered
         self.simulation_cells, self.new_cells = self.new_cells, self.simulation_cells
 
         # debug view na kernel konvoluce

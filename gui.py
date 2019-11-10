@@ -74,7 +74,8 @@ class GUI:
         "deadMin": 0.15,
         "popMax" : 0.5,
         "birthMin" : 0.4,
-        "lifeMin" : 0.5
+        "lifeMin" : 0.5,
+        "showFourier" : 0,
     }
     actions = {
         app.window.key.Q: ("deadMin", 0.1),
@@ -86,7 +87,9 @@ class GUI:
         "y" : ("birthMin", 0.01),
         "x" : ("birthMin", -0.01),
         "+" : ("lifeMin", 0.01),
-        "ě" : ("lifeMin", -0.01)
+        "ě" : ("lifeMin", -0.01),
+        "f" : ("showFourier", 1),
+        "g" : ("showFourier", -1)
     }
 
     def __init__(self, width, height):
@@ -105,7 +108,7 @@ class GUI:
         for valKey, value in self.values.items():
             print(valKey, "=", value)
         print("========================")
-    
+
     def on_draw(self, dt):
         for o in self.objects:
             o.render(self.pixels)
