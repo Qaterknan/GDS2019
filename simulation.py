@@ -3,6 +3,19 @@ import scipy
 from scipy.ndimage import gaussian_filter
 from gui import Graph
 
+class Kernel:
+    def __init__(self, values, cells_shape):
+        self.shape = values.shape
+        self.size = values.shape[0]
+        self.values = values
+
+        self.cells_shape = cells_shape
+        self.update_fft()
+    
+    def update_fft(self):
+        self.fft = np.fft.rfft2(self.values, self.cells_shape)
+
+
 class Simulation:
     averaging = False
     metricPoints = 100
@@ -31,8 +44,7 @@ class Simulation:
         mu = self.gaussian_kernel_size // 2
         sigma = 30
         self.gaussian_kernel = np.fromfunction(lambda x, y: np.exp(-(x-mu)**2 / sigma - (y-mu)**2 / sigma), (self.gaussian_kernel_size, self.gaussian_kernel_size))
-        self.gaussian_kernel = self.gaussian_kernel/np.max(self.gaussian_kernel)
-        self.gaussian_kernel_fft = np.fft.rfft2(self.gaussian_kernel, self.cells.shape)
+        self.gaussian_kernel = Kernel(self.gaussian_kernel/np.max(self.gaussian_kernel), self.cells.shape)
 
         # circle kernel
         self.circle_kernel_size = 33
@@ -43,8 +55,7 @@ class Simulation:
             dist = np.sqrt((x-center)**2 + (y-center)**2)
             return np.exp(-(dist-radius)**2 / sigma)
         self.circle_kernel = np.fromfunction(circle_fn, (self.circle_kernel_size, self.circle_kernel_size))
-        self.circle_kernel = self.circle_kernel/np.max(self.circle_kernel)
-        self.circle_kernel_fft = np.fft.rfft2(self.circle_kernel, self.cells.shape)
+        self.circle_kernel = Kernel(self.circle_kernel/np.max(self.circle_kernel), self.cells.shape)
 
         # checkerboard kernel
         self.kernel_size = 16
@@ -53,8 +64,7 @@ class Simulation:
         self.kernel[:half_size, :half_size] = 1.0
         self.kernel[half_size:, half_size:] = 1.0
 
-        self.kernel = gaussian_filter(self.kernel, 0.1)
-        self.kernel_fft = np.fft.rfft2(self.kernel, self.cells.shape)
+        self.kernel = Kernel(gaussian_filter(self.kernel, 0.1), self.cells.shape)
 
     def on_draw_random(self, dt):
         rnd = np.random.uniform(0, 1, (self.width, self.height))
@@ -67,11 +77,11 @@ class Simulation:
         self.simulation_cells[x-size:x+size, y-size:y+size] = 1.0
         # self.cells = np.clip(self.cells, 0, 1)
 
-    def fast_conv2d(self, cells, kernel_fft, kernel_size):
-        conv_cells = np.fft.irfft2(np.fft.rfft2(cells) * kernel_fft)
+    def fast_conv2d(self, cells, kernel):
+        conv_cells = np.fft.irfft2(np.fft.rfft2(cells) * kernel.fft)
 
-        conv_cells = np.roll(conv_cells, -kernel_size//2+1, 0)
-        conv_cells = np.roll(conv_cells, -kernel_size//2+1, 1)
+        conv_cells = np.roll(conv_cells, -kernel.size//2+1, 0)
+        conv_cells = np.roll(conv_cells, -kernel.size//2+1, 1)
 
         return conv_cells
 
@@ -98,9 +108,9 @@ class Simulation:
         # neighbours_filter = np.array([[1,1,1], [1,0,1], [1,1,1]])
         # self.new_cells = scipy.signal.convolve2d(self.cells, self.kernel, "same", "wrap")
 
-        gaussian_cells = self.fast_conv2d(self.simulation_cells, self.gaussian_kernel_fft, self.gaussian_kernel_size)
-        circle_cells = self.fast_conv2d(self.simulation_cells, self.circle_kernel_fft, self.circle_kernel_size)
-        checkerboard_cells = self.fast_conv2d(self.simulation_cells, self.kernel_fft, self.kernel_size)
+        gaussian_cells = self.fast_conv2d(self.simulation_cells, self.gaussian_kernel)
+        circle_cells = self.fast_conv2d(self.simulation_cells, self.circle_kernel)
+        checkerboard_cells = self.fast_conv2d(self.simulation_cells, self.kernel)
 
         # new_cells = new_cells[1:, 1:]
         # new_cells = np.pad(new_cells, [(1, 0), (1, 0)])
@@ -128,8 +138,10 @@ class Simulation:
         # new_cells /= np.max(new_cells)
         # new_cells = ((new_cells >= 2) & (new_cells <= 3) & (old_cells == 1)) | ((new_cells == 3) & (old_cells==0))
         # new_cells = new_cells.astype(float)
-        self.new_cells = checkerboard_cells/np.sum(self.kernel)
+        self.new_cells = checkerboard_cells/np.sum(self.kernel.values)
+
         self.new_cells = ((self.new_cells < self.GUI.values["popMax"]) & ((self.new_cells > self.GUI.values["birthMin"]) | ((self.new_cells > self.GUI.values["deadMin"]) & (self.simulation_cells > self.GUI.values["lifeMin"])))).astype(float)
+        
         # Determines the derivative
         derivative = np.absolute(self.new_cells - self.simulation_cells)
         derivative_sum = np.log(np.sum(derivative)+1)/np.log(2)

@@ -20,8 +20,37 @@ class KernelPainter:
 
     def render(self, pixels):
         width, height = self.kernel.shape
-        pixels[self.x:self.x+width, self.y:self.y+height] = self.kernel
+        pixels[self.x:self.x+width, self.y:self.y+height] = self.kernel.values
+    
+    def on_mouse_press(self, x, y, button):
+        self.on_mouse(x, y, button)
 
+    def on_mouse_drag(self, x, y, dx, dy, buttons):
+        self.on_mouse(x, y, buttons)
+
+    def on_mouse(self, x, y, button):
+        width, height = self.kernel.shape
+        if x >= self.x and x < self.x+width and y >= self.y and y < self.y + height:
+            relx = x - self.x
+            rely = y - self.y
+            for kx in range(self.kernel.shape[0]):
+                for ky in range(self.kernel.shape[1]):
+                    dx, dy = relx - kx, rely - ky
+                    sign = +1 if button == 2 else -1
+                    sigma = 3
+                    add = sign * np.exp(- (dx**2) / sigma - (dy**2) / sigma)
+                    new_val = np.clip(self.kernel.values[kx, ky] + add, 0, 1)
+                    self.kernel.values[kx, ky] = new_val
+            self.kernel.update_fft()
+            # self.kernel = np.clip(self.kernel, 0, 1)
+
+            # if button == 2:
+            # if button == 8:
+            #     self.kernel[relx, rely] -= 0.3
+
+
+# class Image:
+    
 class Slider:
     def __init__(self, x, y, width, height, min_val, max_val, values, value_key):
         self.x = x
@@ -193,3 +222,8 @@ class GUI:
         for o in self.objects:
             if hasattr(o, 'on_mouse_motion'):
                 o.on_mouse_motion(x, y, dx, dy)
+
+    def on_mouse_press(self, x, y, button):
+        for o in self.objects:
+            if hasattr(o, 'on_mouse_press'):
+                o.on_mouse_press(x, y, button)
