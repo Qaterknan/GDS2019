@@ -45,9 +45,9 @@ all_pixels = np.zeros((cwidth, cheight+gui_height, 4))
 GUI = gui.GUI(cwidth, gui_height)
 simulation = Simulation(cwidth, cheight, GUI)
 
-GUI.objects.append(gui.KernelPainter(160, 0, simulation.kernel))
-GUI.objects.append(gui.KernelPainter(190, 0, simulation.gaussian_kernel))
-GUI.objects.append(gui.KernelPainter(220, 0, simulation.circle_kernel))
+# GUI.objects.append(gui.KernelPainter(160, 0, simulation.kernel))
+# GUI.objects.append(gui.KernelPainter(190, 0, simulation.gaussian_kernel))
+# GUI.objects.append(gui.KernelPainter(220, 0, simulation.circle_kernel))
 
 @window.event
 def on_draw(dt):

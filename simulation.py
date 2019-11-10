@@ -1,7 +1,7 @@
 import numpy as np
 import scipy
 from scipy.ndimage import gaussian_filter
-from gui import Graph
+from gui import Graph, GUIText
 
 class Kernel:
     def __init__(self, values, cells_shape):
@@ -11,7 +11,7 @@ class Kernel:
 
         self.cells_shape = cells_shape
         self.update_fft()
-    
+
     def update_fft(self):
         self.fft = np.fft.rfft2(self.values, self.cells_shape)
 
@@ -29,11 +29,14 @@ class Simulation:
 
         self.derivative_metric = np.zeros(self.metricPoints)
         self.gaussian_metric = np.zeros(self.metricPoints)
-        GUI.objects.append(Graph(270, 0, 60, "derivative_metric", self, top_limit=17, bottom_limit=11))
-        GUI.objects.append(Graph(390, 0, 60, "gaussian_metric", self, top_limit=14000, bottom_limit=6000))
+        GUI.objects.append(Graph(280, 0, 60, "derivative_metric", self, top_limit=17, bottom_limit=11))
+        GUI.objects.append(Graph(410, 0, 60, "gaussian_metric", self, top_limit=14000, bottom_limit=6000))
+        # GUI.objects.append(Graph(280, 0, 60, "derivative_metric", self, top_limit=20, bottom_limit=0))
+        # GUI.objects.append(Graph(410, 0, 60, "gaussian_metric", self, top_limit=20000, bottom_limit=0))
         self.win_condition = {}
         self.win_condition["derivative_metric"] = False
         self.win_condition["gaussian_metric"] = False
+        self.won = False
 
         self.cells = np.zeros((self.width, self.height))
         self.simulation_cells = (np.random.uniform(0, 1, (self.width, self.height)) > 0.5).astype(np.float)
@@ -140,8 +143,8 @@ class Simulation:
         # new_cells = new_cells.astype(float)
         self.new_cells = checkerboard_cells/np.sum(self.kernel.values)
 
-        self.new_cells = ((self.new_cells < self.GUI.values["popMax"]) & ((self.new_cells > self.GUI.values["birthMin"]) | ((self.new_cells > self.GUI.values["deadMin"]) & (self.simulation_cells > self.GUI.values["lifeMin"])))).astype(float)
-        
+        self.new_cells = ((self.new_cells < self.GUI.values["popMax"]) & ((self.new_cells > (1-self.GUI.values["birthMin"])) | ((self.new_cells > self.GUI.values["deadMin"]) & (self.simulation_cells > self.GUI.values["lifeMin"])))).astype(float)
+
         # Determines the derivative
         derivative = np.absolute(self.new_cells - self.simulation_cells)
         derivative_sum = np.log(np.sum(derivative)+1)/np.log(2)
@@ -155,8 +158,8 @@ class Simulation:
         # print(derivative_sum, gaussian_sum, gaussian_sq_sum)
         # Update metrics
         # self.new_cells = np.exp(-(self.new_cells - 0.5 + 0.2*self.simulation_cells) ** 2/(0.1+0.2*self.simulation_cells))
-        if(self.win_condition["derivative_metric"] and self.win_condition["gaussian_metric"]):
-            print("WIN")
+        if(self.win_condition["derivative_metric"] and self.win_condition["gaussian_metric"] and not self.won):
+            self.GUI.objects.append(GUIText(200, 70, "you won, congratulations", 3))
         if self.averaging:
             self.cells = 0.3*self.simulation_cells+0.7*self.cells
         else:

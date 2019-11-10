@@ -21,7 +21,7 @@ class KernelPainter:
     def render(self, pixels):
         width, height = self.kernel.shape
         pixels[self.x:self.x+width, self.y:self.y+height] = self.kernel.values
-    
+
     def on_mouse_press(self, x, y, button):
         self.on_mouse(x, y, button)
 
@@ -50,7 +50,7 @@ class KernelPainter:
 
 
 # class Image:
-    
+
 class Slider:
     def __init__(self, x, y, width, height, min_val, max_val, values, value_key):
         self.x = x
@@ -143,12 +143,70 @@ class Graph(Rectangle):
             pixels[self.x+i, self.y+top_limit] = 0.5
             pixels[self.x+i, self.y+bottom_limit] = 0.5
 
+class Glyph(Rectangle):
+
+    map = {
+        "a" : [[0, 1, 0], [1, 0, 1], [1, 1, 1], [1, 0, 1], [1, 0, 1]],
+        "b" : [[1,1,0],[1,0,1],[1,1,0],[1,0,1],[1,1,0]],
+        "c" : [[1,1,1],[1,0,0],[1,0,0],[1,0,0],[1,1,1]],
+        "d" : [[1, 1, 0], [1, 0, 1], [1, 0, 1], [1, 0, 1], [1, 1, 0]],
+        "e" : [[1, 1, 1], [1, 0, 0], [1, 1, 1], [1, 0, 0], [1, 1, 1]],
+        "f" : [[1, 1, 1], [1, 0, 0], [1, 1, 1], [1, 0, 0], [1, 0, 0]],
+        "g" : [[1, 1, 1], [1, 0, 0], [1, 0, 1], [1, 0, 1], [1, 1, 1]],
+        "h" : [[1, 0, 1], [1, 0, 1], [1, 1, 1], [1, 0, 1], [1, 0, 1]],
+        "i" : [[1, 1, 1], [0, 1, 0], [0, 1, 0], [0, 1, 0], [1, 1, 1]],
+        "j" : [[1, 1, 1], [0, 0, 1], [0, 0, 1], [1, 0, 1], [1, 1, 1]],
+        "k" : [[1, 0, 1], [1, 1, 0], [1, 0, 0], [1, 1, 0], [1, 0, 1]],
+        "l" : [[1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 1, 1]],
+        "m" : [[1, 0, 1], [1, 1, 1], [1, 0, 1], [1, 0, 1], [1, 0, 1]],
+        "n" : [[1, 1, 0], [1, 0, 1], [1, 0, 1], [1, 0, 1], [1, 0, 1]],
+        "o" : [[1, 1, 1], [1, 0, 1], [1, 0, 1], [1, 0, 1], [1, 1, 1]],
+        "p" : [[1, 1, 1], [1, 0, 1], [1, 1, 1], [1, 0, 0], [1, 0, 0]],
+        "q" : [[1, 1, 1], [1, 0, 1], [1, 0, 1], [1, 1, 0], [0, 1, 1]],
+        "r" : [[1, 1, 1], [1, 0, 1], [1, 1, 1], [1, 1, 0], [1, 0, 1]],
+        "s" : [[1, 1, 1], [1, 0, 0], [1, 1, 1], [0, 0, 1], [1, 1, 1]],
+        "t" : [[1, 1, 1], [0, 1, 0], [0, 1, 0], [0, 1, 0], [0, 1, 0]],
+        "u" : [[1, 0, 1], [1, 0, 1], [1, 0, 1], [1, 0, 1], [1, 1, 1]],
+        "v" : [[1, 0, 1], [1, 0, 1], [1, 0, 1], [1, 0, 1], [0, 1, 0]],
+        "w" : [[1, 0, 1], [1, 0, 1], [1, 0, 1], [1, 1, 1], [1, 0, 1]],
+        "x" : [[1, 0, 1], [1, 0, 1], [0, 1, 0], [1, 0, 1], [1, 0, 1]],
+        "y" : [[1, 0, 1], [1, 0, 1], [0, 1, 0], [0, 1, 0], [0, 1, 0]],
+        "z" : [[1, 1, 1], [0, 0, 1], [0, 1, 0], [1, 0, 0], [1, 1, 1]],
+        " " : [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]],
+        "," : [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 1, 0], [0, 1, 0]],
+        ">" : [[1, 0, 0], [0, 1, 0], [0, 0, 1], [0, 1, 0], [1, 0, 0]],
+        "-" : [[0, 0, 0], [0, 0, 0], [1, 1, 1], [0, 0, 0], [0, 0, 0]]
+    }
+
+    def __init__(self, x,y, character, scale=1):
+        super().__init__(x,y,3,5,1.0)
+        self.character = character
+        self.scaled_map = np.repeat(np.repeat(self.map[character], scale, axis=1), scale, axis=0)
+        self.scaled_map = self.scaled_map.transpose()
+        self.scaled_map = np.flip(self.scaled_map, axis=1)
+        self.scale = scale
+
+    def render(self, pixels):
+        pixels[self.x:self.x+self.width*self.scale, self.y:self.y+self.height*self.scale] = self.scaled_map
+
+class GUIText(Rectangle):
+    def __init__(self, x,y, text, scale=1):
+        super().__init__(x,y,(3+2)*len(text),5,1.0)
+        self.characters = []
+        for i in range(len(text)):
+            self.characters.append(Glyph(x+i*4*scale, y, text[i], scale))
+        self.scale = scale
+
+    def render(self, pixels):
+        for i in range(len(self.characters)):
+            self.characters[i].render(pixels)
+
 class GUI:
 
     values = {
         "deadMin": 0.15,
         "popMax" : 0.5,
-        "birthMin" : 0.4,
+        "birthMin" : 0.6,
         "lifeMin" : 0.5,
         "showFourier" : 0,
     }
@@ -172,9 +230,15 @@ class GUI:
         self.height = height
         self.objects = []
         self.objects.append(Slider(0, 0, 30, 100, 0.0, 1.0, self.values, "deadMin"))
-        self.objects.append(Slider(40, 0, 30, 100, 0.0, 1.0, self.values, "popMax"))
-        self.objects.append(Slider(80, 0, 30, 100, 0.0, 1.0, self.values, "birthMin"))
-        self.objects.append(Slider(120, 0, 30, 100, 0.0, 1.0, self.values, "lifeMin"))
+        self.objects.append(GUIText(0, 70, "death", 2))
+        self.objects.append(Slider(60, 0, 30, 100, 0.0, 1.0, self.values, "popMax"))
+        self.objects.append(GUIText(60, 70, "crowd", 2))
+        self.objects.append(Slider(120, 0, 30, 100, 0.0, 1.0, self.values, "birthMin"))
+        self.objects.append(GUIText(120,70, "birth", 2))
+        self.objects.append(GUIText(160, 50, "make choices",2))
+        self.objects.append(GUIText(160, 30, "create system",2))
+        self.objects.append(GUIText(160, 10, "within limits->",2))
+        # self.objects.append(Slider(120, 0, 30, 100, 0.0, 1.0, self.values, "lifeMin"))
         self.objects.append(Rectangle(0, self.height-1, self.width, 1, 0.5))
 
         self.pixels = np.zeros((width, height))
