@@ -11,8 +11,8 @@ class Simulation:
         self.height = height
         self.GUI = GUI
 
-        self.derivative_metric = np.zeros(metricPoints)
-        self.gaussian_metric = np.zeros(metricPoints)
+        self.derivative_metric = np.zeros(self.metricPoints)
+        self.gaussian_metric = np.zeros(self.metricPoints)
 
         self.cells = np.zeros((self.width, self.height))
         self.simulation_cells = (np.random.uniform(0, 1, (self.width, self.height)) > 0.5).astype(np.float)
