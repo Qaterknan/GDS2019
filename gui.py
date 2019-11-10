@@ -12,6 +12,16 @@ class Rectangle:
     def render(self, pixels):
         pixels[self.x:self.x+self.width, self.y:self.y+self.height] = self.color
 
+class KernelPainter:
+    def __init__(self, x, y, kernel):
+        self.x = x
+        self.y = y
+        self.kernel = kernel
+    
+    def render(self, pixels):
+        width, height = self.kernel.shape
+        pixels[self.x:self.x+width, self.y:self.y+height] = self.kernel
+
 class Slider:
     def __init__(self, x, y, width, height, min_val, max_val, values, value_key):
         self.x = x
@@ -55,7 +65,6 @@ class Slider:
 
     def on_mouse(self, x, y):
         if x >= self.x and x <= self.x+self.width and y >= self.y and y <= self.y + self.height:
-            print("inside!")
             y_diff = y - self.y
             self.set_value_relative(y_diff/self.height)
 

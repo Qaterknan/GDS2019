@@ -41,6 +41,10 @@ all_pixels = np.zeros((cwidth, cheight+gui_height, 4))
 GUI = gui.GUI(cwidth, gui_height)
 simulation = Simulation(cwidth, cheight, GUI)
 
+GUI.objects.append(gui.KernelPainter(160, 0, simulation.kernel))
+GUI.objects.append(gui.KernelPainter(190, 0, simulation.gaussian_kernel))
+GUI.objects.append(gui.KernelPainter(220, 0, simulation.circle_kernel))
+
 @window.event
 def on_draw(dt):
     simulation.on_draw(dt)
@@ -60,7 +64,8 @@ def on_draw(dt):
 def on_mouse_drag(x, y, dx, dy, button):
     GUI.on_mouse_drag(x, window.height-y, dx, dy, button)
     # normalizovaná myš
-    simulation.on_mouse_drag(x/window.width, (window.height-y-gui_height)/cheight, dx, -dy, button)
+    if window.height - y > gui_height:
+        simulation.on_mouse_drag(x/window.width, (window.height-y-gui_height)/cheight, dx, -dy, button)
     # print('Mouse drag (x=%.1f, y=%.1f, dx=%.1f, dy=%.1f, button=%d)' % (x, y, dx, dy, button), window.width, window.height)
 
 
